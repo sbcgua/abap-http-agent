@@ -247,13 +247,13 @@ class ltcl_http_agent_test implementation.
   method post.
 
     data lo_cut type ref to zif_aha_http_agent.
-    constants lv_payload type xstring value '102030'.
+    constants lc_payload type xstring value '102030'.
     lo_cut = zcl_aha_http_agent=>create( iv_destination = '???' ).
 
     lo_cut->request(
       iv_method  = 'POST'
       iv_uri     = 'service/1'
-      iv_payload = lv_payload ).
+      iv_payload = lc_payload ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_client_mock->mv_method
@@ -266,7 +266,7 @@ class ltcl_http_agent_test implementation.
       exp = 1 ).
     cl_abap_unit_assert=>assert_equals(
       act = mo_client_mock->mv_last_data
-      exp = lv_payload ).
+      exp = lc_payload ).
 
   endmethod.
 
