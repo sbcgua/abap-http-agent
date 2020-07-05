@@ -146,9 +146,11 @@
       "ignoreFunctionModuleName": false,
       "ignoreKeywords": []
     },
-    "line_break_multiple_parameters": true,
+    "line_break_multiple_parameters": {
+      "exclude": ["zcx_aha_error.clas.testclasses.abap"]
+    },
     "line_length": {
-      "exclude": ["zcx_aha_error.clas.testclasses.abap"],
+      "exclude": [],
       "reason": "",
       "length": 120
     },
