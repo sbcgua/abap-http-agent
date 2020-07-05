@@ -48,38 +48,47 @@ class ltcl_if_http_client_mock implementation.
   method if_http_client~send.
     mv_send_called = mv_send_called + 1.
   endmethod.
+
   method if_http_client~receive.
     mv_recv_called = mv_recv_called + 1.
   endmethod.
+
   method if_http_client~get_last_error.
   endmethod.
 
   " if_http_request
   method if_http_request~get_last_error.
   endmethod.
+
   method if_http_request~set_content_type.
     mv_content_type = content_type.
   endmethod.
+
   method if_http_request~set_data.
     mv_last_data = data.
   endmethod.
+
   method if_http_request~add_multipart.
     data mp like line of mt_multi.
     create object mp.
     append mp to mt_multi.
     entity = mp.
   endmethod.
+
   method if_http_request~set_version.
   endmethod.
+
   method if_http_request~set_method.
     mv_method = method.
   endmethod.
+
   method if_http_request~set_form_field.
     field-symbols <f> like line of mt_req_form_fields.
     append initial line to mt_req_form_fields assigning <f>.
     <f>-name  = name.
     <f>-value = value.
   endmethod.
+
   method if_http_request~set_header_field.
     field-symbols <f> like line of mt_req_header_fields.
     append initial line to mt_req_header_fields assigning <f>.
@@ -91,12 +100,15 @@ class ltcl_if_http_client_mock implementation.
   method if_http_response~get_data.
     data = mv_resp_data.
   endmethod.
+
   method if_http_response~get_status.
     code = mv_resp_code.
   endmethod.
+
   method if_http_response~get_cdata.
     data = mv_resp_cdata.
   endmethod.
+
   method if_http_response~get_header_fields.
   endmethod.
 

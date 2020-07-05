@@ -17,7 +17,7 @@ class ltcl_error implementation.
     data lx type ref to zcx_aha_error.
 
     try.
-      zcx_aha_error=>raise( repeat( val = 'a' occ = 50 ) &&  repeat( val = 'b' occ = 50 ) && '123' ).
+      zcx_aha_error=>raise( repeat( val = 'a' occ = 50 ) && repeat( val = 'b' occ = 50 ) && '123' ).
       cl_abap_unit_assert=>fail( ).
     catch zcx_aha_error into lx.
       cl_abap_unit_assert=>assert_equals(
