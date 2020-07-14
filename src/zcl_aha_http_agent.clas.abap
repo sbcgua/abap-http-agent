@@ -7,7 +7,7 @@ class zcl_aha_http_agent definition
 
     interfaces zif_aha_http_agent .
 
-    class-methods create
+    class-methods create_for_rfc_destination
       importing
         !iv_destination type c
       returning
@@ -87,7 +87,7 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
   endmethod.
 
 
-  method create.
+  method create_for_rfc_destination.
 
     create object ri_instance type zcl_aha_http_agent
       exporting

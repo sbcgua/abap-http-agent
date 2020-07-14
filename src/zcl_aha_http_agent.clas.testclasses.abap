@@ -156,7 +156,7 @@ class ltcl_http_agent_test implementation.
 
     data lo_cut type ref to zif_aha_http_agent.
     data li_resp type ref to zif_aha_http_response.
-    lo_cut = zcl_aha_http_agent=>create( iv_destination = '???' ).
+    lo_cut = zcl_aha_http_agent=>create_for_rfc_destination( iv_destination = '???' ).
 
     li_resp = lo_cut->request(
       iv_uri     = 'service/1'
@@ -248,7 +248,7 @@ class ltcl_http_agent_test implementation.
 
     data lo_cut type ref to zif_aha_http_agent.
     constants lc_payload type xstring value '102030'.
-    lo_cut = zcl_aha_http_agent=>create( iv_destination = '???' ).
+    lo_cut = zcl_aha_http_agent=>create_for_rfc_destination( iv_destination = '???' ).
 
     lo_cut->request(
       iv_method  = 'POST'
@@ -282,7 +282,7 @@ class ltcl_http_agent_test implementation.
     <mp>-filename     = 'myfile.txt'.
     <mp>-name         = 'myfile'.
 
-    lo_cut = zcl_aha_http_agent=>create( iv_destination = '???' ).
+    lo_cut = zcl_aha_http_agent=>create_for_rfc_destination( iv_destination = '???' ).
 
     lo_cut->request(
       iv_method  = 'POST'
