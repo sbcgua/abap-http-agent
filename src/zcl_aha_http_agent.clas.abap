@@ -66,13 +66,14 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
 
         data lo_part type ref to if_http_entity.
         lo_part = ii_request->add_multipart( ).
+        data lv_filename type string.
+        lv_filename = cl_http_utility=>if_http_utility~escape_url( <part>-filename ).
         lo_part->set_header_field(
           name  = 'content-disposition'
-          value = |form-data; name="{ <part>-name }"; filename="{ <part>-filename }"| ).
+          value = |form-data; name="{ <part>-name }"; filename*=UTF-8''{ lv_filename }; filename="{ <part>-filename }"| ).
         lo_part->set_content_type( <part>-content_type ).
         lo_part->set_data( <part>-data ).
       endloop.
-
     else.
       zcx_aha_error=>raise( |Unexpected payload type { lo_type->absolute_name }| ).
     endif.
