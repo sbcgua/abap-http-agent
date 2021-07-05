@@ -332,7 +332,7 @@ class ltcl_http_agent_test implementation.
     clear lt_exp_pairs.
     append initial line to lt_exp_pairs assigning <f>.
     <f>-name  = 'content-disposition'.
-    <f>-value = 'form-data; name="myfile"; filename="myfile.txt"'.
+    <f>-value = 'form-data; name="myfile"; filename*=UTF-8''''myfile.txt; filename="myfile.txt"'.
     cl_abap_unit_assert=>assert_equals(
       act = lo_mp->mt_req_header_fields
       exp = lt_exp_pairs ).
