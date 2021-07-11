@@ -133,7 +133,7 @@
     "keep_single_parameter_on_one_line": {
       "exclude": [],
       "reason": "",
-      "length": 120
+      "length": 130
     },
     "keyword_case": {
       "exclude": [],
@@ -141,6 +141,7 @@
       "style": "lower",
       "ignoreExceptions": true,
       "ignoreLowerClassImplmentationStatement": true,
+      "ignoreGlobalClassBoundaries": true,
       "ignoreGlobalClassDefinition": false,
       "ignoreGlobalInterface": false,
       "ignoreFunctionModuleName": false,
@@ -152,7 +153,7 @@
     "line_length": {
       "exclude": [],
       "reason": "",
-      "length": 120
+      "length": 130
     },
     "line_only_punc": {
       "exclude": [],
