@@ -50,7 +50,7 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
     if lo_type->type_kind = cl_abap_typedescr=>typekind_xstring.
       ii_request->set_data( iv_payload ).
 
-    elseif lo_type->type_kind = cl_abap_typedescr=>typekind_string.
+    elseif lo_type->type_kind = cl_abap_typedescr=>typekind_string or lo_type->type_kind = cl_abap_typedescr=>typekind_char.
       ii_request->set_cdata( iv_payload ).
 
     elseif is_multipart_tab( lo_type ) = abap_true.
