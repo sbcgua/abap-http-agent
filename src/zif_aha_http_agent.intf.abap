@@ -1,8 +1,9 @@
 interface zif_aha_http_agent
   public .
 
-  constants:
-    version type string value 'v0.0.1'.
+  constants version type string value 'v1.0.0'.
+  constants origin type string value 'https://github.com/sbcgua/abap-http-agent'.
+  constants license type string value 'MIT'.
 
   constants:
     begin of c_methods,
