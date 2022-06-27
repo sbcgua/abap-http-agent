@@ -139,9 +139,11 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
       endloop.
     endif.
 
-    if iv_method = zif_aha_http_agent=>c_methods-post
+    if iv_payload is not initial and (
+      iv_method = zif_aha_http_agent=>c_methods-post
+      or iv_method = zif_aha_http_agent=>c_methods-delete
       or iv_method = zif_aha_http_agent=>c_methods-put
-      or iv_method = zif_aha_http_agent=>c_methods-patch.
+      or iv_method = zif_aha_http_agent=>c_methods-patch ).
       attach_payload(
         ii_request = li_client->request
         iv_payload = iv_payload ).
