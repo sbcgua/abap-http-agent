@@ -9,7 +9,9 @@ interface zif_aha_http_response
       value(rv_data) type string.
   methods json
     returning
-      value(ri_json) type ref to zif_ajson.
+      value(ri_json) type ref to zif_ajson
+    raising
+      zcx_aha_error.
 
   methods is_ok
     returning

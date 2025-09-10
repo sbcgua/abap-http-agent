@@ -21,7 +21,7 @@ interface zif_aha_http_agent
       filename     type string,
       content_type type string,
       data         type xstring,
-    end of ty_multipart .
+    end of ty_multipart.
   types:
     tt_multipart type standard table of ty_multipart with key name.
   types:

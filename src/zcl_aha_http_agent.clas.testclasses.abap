@@ -29,6 +29,7 @@ class ltcl_if_http_client_mock definition
     data mv_resp_cdata type string.
     data mv_resp_data type xstring.
     data mv_resp_code type i.
+    data mo_resp_headers type ref to zcl_abap_string_map.
 
     class-methods create
       returning
@@ -110,6 +111,12 @@ class ltcl_if_http_client_mock implementation.
   endmethod.
 
   method if_http_response~get_header_fields.
+    if mo_resp_headers is bound.
+      field-symbols <i> like line of mo_resp_headers->mt_entries.
+      loop at mo_resp_headers->mt_entries assigning <i>.
+        append <i> to fields.
+      endloop.
+    endif.
   endmethod.
 
 endclass.
@@ -128,9 +135,12 @@ class ltcl_http_agent_test definition
 
     methods setup.
     methods get for testing raising zcx_aha_error.
-*    methods get_json for testing raising zcx_aha_error.
+    methods get_json for testing raising zcx_aha_error.
+    methods get_json_negative for testing raising zcx_aha_error.
     methods post for testing raising zcx_aha_error.
     methods post_multipart for testing raising zcx_aha_error.
+    methods post_json for testing raising zcx_aha_error zcx_ajson_error.
+    methods post_oref_negative for testing raising zcx_aha_error zcx_ajson_error.
 
 endclass.
 
@@ -211,33 +221,70 @@ class ltcl_http_agent_test implementation.
 
   endmethod.
 
-*  method get_json.
-*
-*    data lo_cut type ref to zif_aha_http_agent.
-*    data li_resp type ref to zif_aha_http_response.
-*    lo_cut = zcl_aha_http_agent=>create( iv_destination = '???' ).
-*
-*    li_resp = lo_cut->request( iv_uri = 'service/1' ).
-*
-*    " Responce
-*
-*    types:
-*      begin of lty_dummy,
-*        a type string,
-*        b type string,
-*      end of lty_dummy.
-*    data ls_act type lty_dummy.
-*    data ls_exp type lty_dummy.
-*    ls_exp-a = '123'.
-*    ls_exp-b = 'qwe'.
-*
-*    mo_client_mock->mv_resp_data = lcl_utils=>string_to_xstring_utf8( '{ "a": "123", "b": "qwe" }' ).
-*    li_resp->json( changing cv_container = ls_act ).
-*    cl_abap_unit_assert=>assert_equals(
-*      act = ls_act
-*      exp = ls_exp ).
-*
-*  endmethod.
+  method get_json.
+
+    data lo_cut  type ref to zif_aha_http_agent.
+    data li_resp type ref to zif_aha_http_response.
+    lo_cut = zcl_aha_http_agent=>create_for_rfc_destination( iv_destination = '???' ).
+
+    li_resp = lo_cut->request( iv_uri = 'service/json' ).
+
+    mo_client_mock->mv_resp_code = 200.
+    mo_client_mock->mv_resp_data = lcl_utils=>string_to_xstring_utf8( '{ "a": "123", "b": "qwe" }' ).
+    mo_client_mock->mo_resp_headers = zcl_abap_string_map=>create( )->set(
+      iv_key = 'content-type'
+      iv_val = 'application/json; charset=utf-8' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_resp->is_ok( )
+      exp = abap_true ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_resp->headers( )->size( )
+      exp = 1 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_resp->headers( )->get( 'Content-Type' )
+      exp = 'application/json; charset=utf-8' ).
+
+    data li_json type ref to zif_ajson.
+    li_json = li_resp->json( ).
+
+    cl_abap_unit_assert=>assert_bound( li_json ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_json->get( '/a' )
+      exp = '123' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = li_json->get( '/b' )
+      exp = 'qwe' ).
+
+  endmethod.
+
+  method get_json_negative.
+
+    data lo_cut  type ref to zif_aha_http_agent.
+    data li_resp type ref to zif_aha_http_response.
+    data lx type ref to zcx_aha_error.
+
+    lo_cut = zcl_aha_http_agent=>create_for_rfc_destination( iv_destination = '???' ).
+    li_resp = lo_cut->request( iv_uri = 'service/json' ).
+
+    mo_client_mock->mv_resp_code = 200.
+    mo_client_mock->mv_resp_data = lcl_utils=>string_to_xstring_utf8( '<xml>...' ).
+    mo_client_mock->mo_resp_headers = zcl_abap_string_map=>create( )->set(
+      iv_key = 'content-type'
+      iv_val = 'application/json; charset=utf-8' ).
+
+    try.
+      li_resp->json( ).
+      cl_abap_unit_assert=>fail( ).
+    catch zcx_aha_error into lx.
+      cl_abap_unit_assert=>assert_char_cp(
+        act = lx->get_text( )
+        exp = '*parsing error*' ).
+
+    endtry.
+
+  endmethod.
 
   method post.
 
@@ -331,6 +378,71 @@ class ltcl_http_agent_test implementation.
     cl_abap_unit_assert=>assert_equals(
       act = lo_mp->mt_req_header_fields
       exp = lt_exp_pairs ).
+
+  endmethod.
+
+  method post_json.
+
+    data lo_cut type ref to zif_aha_http_agent.
+    data li_json type ref to zif_ajson.
+
+    lo_cut = zcl_aha_http_agent=>create_for_rfc_destination( iv_destination = '???' ).
+    li_json = zcl_ajson=>parse( '{ "a": "123", "b": "qwe" }' ).
+
+    lo_cut->request(
+      iv_method  = 'POST'
+      iv_uri     = 'service/json'
+      iv_payload = li_json ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_client_mock->mv_method
+      exp = 'POST' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_client_mock->mv_send_called
+      exp = 1 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_client_mock->mv_recv_called
+      exp = 1 ).
+
+    " Headers
+    data lt_exp_pairs type ltcl_if_http_client_mock=>tt_header_fields.
+    field-symbols <f> like line of lt_exp_pairs.
+
+    append initial line to lt_exp_pairs assigning <f>.
+    <f>-name  = '~request_uri'.
+    <f>-value = 'service/json'.
+    append initial line to lt_exp_pairs assigning <f>.
+    <f>-name  = 'content-type'.
+    <f>-value = 'application/json; charset=utf-8'.
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_client_mock->mt_req_header_fields
+      exp = lt_exp_pairs ).
+
+    " Payload
+    cl_abap_unit_assert=>assert_equals(
+      act = lcl_utils=>xstring_to_string_utf8( mo_client_mock->mv_last_data )
+      exp = '{"a":"123","b":"qwe"}' ).
+
+  endmethod.
+
+  method post_oref_negative.
+
+    data lo_cut type ref to zif_aha_http_agent.
+    data lx type ref to zcx_aha_error.
+
+    lo_cut = zcl_aha_http_agent=>create_for_rfc_destination( iv_destination = '???' ).
+
+    try.
+      lo_cut->request(
+        iv_method  = 'POST'
+        iv_uri     = 'service/any'
+        iv_payload = me ).
+      cl_abap_unit_assert=>fail( ).
+    catch zcx_aha_error into lx.
+      cl_abap_unit_assert=>assert_char_cp(
+        act = lx->get_text( )
+        exp = 'Unexpected payload type*' ).
+    endtry.
 
   endmethod.
 

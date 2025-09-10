@@ -28,6 +28,13 @@ class zcl_aha_http_agent definition
       returning
         value(rv_yes) type abap_bool.
 
+    class-methods is_ajson
+      importing
+        io_type type ref to cl_abap_typedescr
+        iv_payload type any
+      returning
+        value(rv_yes) type abap_bool.
+
     class-methods attach_payload
       importing
         ii_request type ref to if_http_request
@@ -83,6 +90,25 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
         lo_part->set_content_type( <part>-content_type ).
         lo_part->set_data( <part>-data ).
       endloop.
+
+    elseif is_ajson( io_type = lo_type iv_payload = iv_payload ) = abap_true. " maybe request just "stringifiable ?"
+      data li_ajson type ref to zif_ajson.
+      data lx_ajson type ref to zcx_ajson_error.
+      data lv_xdata type xstring.
+
+      li_ajson ?= iv_payload.
+
+      ii_request->set_header_field(
+        name  = 'content-type'
+        value = 'application/json; charset=utf-8' ).
+
+      try.
+        lv_xdata = lcl_utils=>string_to_xstring_utf8( li_ajson->stringify( ) ).
+      catch zcx_ajson_error into lx_ajson.
+        zcx_aha_error=>raise( lx_ajson->get_text( ) ).
+      endtry.
+      ii_request->set_data( lv_xdata ).
+
     else.
       zcx_aha_error=>raise( |Unexpected payload type { lo_type->absolute_name }| ).
     endif.
@@ -102,6 +128,25 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
     create object ri_instance type zcl_aha_http_agent
       exporting
         iv_destination = iv_destination.
+
+  endmethod.
+
+
+  method is_ajson.
+
+    if io_type->type_kind <> cl_abap_typedescr=>typekind_oref.
+      return.
+    endif.
+
+    try.
+      data li_template type ref to zif_ajson.
+      li_template ?= iv_payload.
+      rv_yes = abap_true.
+    catch cx_sy_move_cast_error.
+    endtry.
+
+    " TODO maybe make more indirect detection, in case ajson is integrated
+    " e.g. by stringify and mt_node_tree
 
   endmethod.
 
