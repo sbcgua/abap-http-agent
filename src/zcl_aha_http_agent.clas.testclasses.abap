@@ -143,16 +143,11 @@ class ltcl_http_agent_test implementation.
 
   method get.
 
-    data lt_query type zif_aha_http_agent=>tty_key_value.
-    data lt_header type zif_aha_http_agent=>tty_key_value.
-    field-symbols <e> like line of lt_query.
+    data lo_query type ref to zcl_abap_string_map.
+    data lo_header type ref to zcl_abap_string_map.
 
-    append initial line to lt_query assigning <e>.
-    <e>-key = 'A'.
-    <e>-val = 'B'.
-    append initial line to lt_header assigning <e>.
-    <e>-key = 'X'.
-    <e>-val = 'Y'.
+    lo_query  = zcl_abap_string_map=>create( 'A=B' ).
+    lo_header = zcl_abap_string_map=>create( 'X=Y' ).
 
     data lo_cut type ref to zif_aha_http_agent.
     data li_resp type ref to zif_aha_http_response.
@@ -160,8 +155,8 @@ class ltcl_http_agent_test implementation.
 
     li_resp = lo_cut->request(
       iv_uri     = 'service/1'
-      it_query   = lt_query
-      it_headers = lt_header ).
+      io_query   = lo_query
+      io_headers = lo_header ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_client_mock->mv_method
@@ -177,7 +172,7 @@ class ltcl_http_agent_test implementation.
     data lt_exp_pairs type ltcl_if_http_client_mock=>tt_header_fields.
     field-symbols <f> like line of lt_exp_pairs.
     append initial line to lt_exp_pairs assigning <f>.
-    <f>-name = 'A'.
+    <f>-name  = 'A'.
     <f>-value = 'B'.
     cl_abap_unit_assert=>assert_equals(
       act = mo_client_mock->mt_req_form_fields

@@ -1,17 +1,17 @@
 class zcl_aha_http_agent definition
   public
   final
-  create private .
+  create private.
 
   public section.
 
-    interfaces zif_aha_http_agent .
+    interfaces zif_aha_http_agent.
 
     class-methods create_for_rfc_destination
       importing
         !iv_destination type c
       returning
-        value(ri_instance) type ref to zif_aha_http_agent .
+        value(ri_instance) type ref to zif_aha_http_agent.
 
     methods constructor
       importing
@@ -34,6 +34,12 @@ class zcl_aha_http_agent definition
         iv_payload type any
       raising
         zcx_aha_error.
+
+    class-methods is_method_w_body
+      importing
+        iv_method type zif_aha_http_agent=>ty_http_method
+      returning
+        value(rv_yes) type abap_bool.
 
 ENDCLASS.
 
@@ -100,6 +106,17 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
   endmethod.
 
 
+  method is_method_w_body.
+
+    rv_yes = boolc(
+      iv_method = zif_aha_http_agent=>c_methods-post
+      or iv_method = zif_aha_http_agent=>c_methods-delete
+      or iv_method = zif_aha_http_agent=>c_methods-put
+      or iv_method = zif_aha_http_agent=>c_methods-patch ).
+
+  endmethod.
+
+
   method is_multipart_tab.
 
     data lt_multipart_dummy type zif_aha_http_agent=>tt_multipart.
@@ -121,29 +138,25 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
       request = li_client->request
       uri     = iv_uri ).
 
-    if lines( it_query ) > 0.
-      field-symbols <p> type zif_aha_http_agent=>ty_key_value.
-      loop at it_query assigning <p> casting.
+    if io_query is bound.
+      field-symbols <p> like line of io_query->mt_entries.
+      loop at io_query->mt_entries assigning <p>.
         li_client->request->set_form_field(
-          name  = <p>-key
-          value = <p>-val ).
+          name  = <p>-k
+          value = <p>-v ).
       endloop.
     endif.
 
-    if lines( it_headers ) > 0.
-      field-symbols <h> type zif_aha_http_agent=>ty_key_value.
-      loop at it_headers assigning <h> casting.
+    if io_headers is bound.
+      field-symbols <h> like line of io_query->mt_entries.
+      loop at io_headers->mt_entries assigning <h>.
         li_client->request->set_header_field(
-          name  = to_lower( <h>-key )
-          value = <h>-val ).
+          name  = to_lower( <h>-k )
+          value = <h>-v ).
       endloop.
     endif.
 
-    if iv_payload is not initial and (
-      iv_method = zif_aha_http_agent=>c_methods-post
-      or iv_method = zif_aha_http_agent=>c_methods-delete
-      or iv_method = zif_aha_http_agent=>c_methods-put
-      or iv_method = zif_aha_http_agent=>c_methods-patch ).
+    if iv_payload is not initial and is_method_w_body( iv_method ) = abap_true.
       attach_payload(
         ii_request = li_client->request
         iv_payload = iv_payload ).

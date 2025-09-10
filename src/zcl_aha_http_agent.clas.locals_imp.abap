@@ -112,15 +112,16 @@ class lcl_http_response implementation.
 
     data lt_headers type tihttpnvp.
     field-symbols <h> like line of lt_headers.
-    field-symbols <pair> like line of rt_headers.
 
     mi_response->get_header_fields( changing fields = lt_headers ).
-    loop at lt_headers assigning <h>.
-      append initial line to rt_headers assigning <pair>.
-      <pair>-key = <h>-name.
-      <pair>-val = <h>-value.
-    endloop.
+    create object ro_headers
+      exporting
+        iv_case_insensitive = abap_true
+        iv_from = lt_headers. " the type is compatible
 
+  endmethod.
+
+  method zif_aha_http_response~json.
   endmethod.
 
 endclass.
