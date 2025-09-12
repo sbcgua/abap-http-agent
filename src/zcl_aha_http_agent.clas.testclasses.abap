@@ -142,6 +142,8 @@ class ltcl_http_agent_test definition
     methods post_json for testing raising zcx_aha_error zcx_ajson_error.
     methods post_oref_negative for testing raising zcx_aha_error zcx_ajson_error.
 
+    methods parse_url for testing raising zcx_aha_error.
+
 endclass.
 
 class ltcl_http_agent_test implementation.
@@ -443,6 +445,46 @@ class ltcl_http_agent_test implementation.
         act = lx->get_text( )
         exp = 'Unexpected payload type*' ).
     endtry.
+
+  endmethod.
+
+  method parse_url.
+
+    data lv_host type string.
+    data lv_uri  type string.
+
+    try.
+      lcl_client_factory=>parse_url( '' ).
+      cl_abap_unit_assert=>fail( ).
+    catch zcx_aha_error.
+    endtry.
+
+    try.
+      lcl_client_factory=>parse_url( 'https:/xyz' ).
+      cl_abap_unit_assert=>fail( ).
+    catch zcx_aha_error.
+    endtry.
+
+    try.
+      lcl_client_factory=>parse_url( 'ftp://xyz' ). " No support
+      cl_abap_unit_assert=>fail( ).
+    catch zcx_aha_error.
+    endtry.
+
+    lcl_client_factory=>parse_url(
+      exporting
+        iv_url = 'https://abc.com/uri/read?a=b&c=d'
+      importing
+        ev_host = lv_host
+        ev_uri  = lv_uri ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_host
+      exp = 'https://abc.com' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_uri
+      exp = '/uri/read?a=b&c=d' ).
 
   endmethod.
 

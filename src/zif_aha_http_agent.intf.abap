@@ -33,7 +33,7 @@ interface zif_aha_http_agent
 
   methods request
     importing
-      !iv_uri     type string    " URI, not URL ! without host
+      !iv_uri     type string optional " URI, not URL ! without host, only for client with SM59 destination
       !iv_method  type ty_http_method default c_methods-get
       !io_query   type ref to zcl_abap_string_map optional
       !io_headers type ref to zcl_abap_string_map optional

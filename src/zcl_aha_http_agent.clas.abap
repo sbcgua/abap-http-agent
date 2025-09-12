@@ -11,16 +11,30 @@ class zcl_aha_http_agent definition
       importing
         !iv_destination type c
       returning
-        value(ri_instance) type ref to zif_aha_http_agent.
+        value(ri_instance) type ref to zif_aha_http_agent
+      raising
+        zcx_aha_error.
+
+    class-methods create_for_url
+      importing
+        !iv_url type csequence
+      returning
+        value(ri_instance) type ref to zif_aha_http_agent
+      raising
+        zcx_aha_error.
 
     methods constructor
       importing
-        !iv_destination type c.
+        !iv_url type csequence optional
+        !iv_destination type c optional
+      raising
+        zcx_aha_error.
 
   protected section.
   private section.
 
     data mv_destination type rfcdest.
+    data mv_url type string.
 
     class-methods is_multipart_tab
       importing
@@ -119,6 +133,11 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
   method constructor.
 
     mv_destination = iv_destination.
+    mv_url = iv_url.
+
+    if boolc( mv_url is initial ) = boolc( mv_destination is initial ).
+      zcx_aha_error=>raise( 'Specify only one of url or destination' ).
+    endif.
 
   endmethod.
 
@@ -128,6 +147,15 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
     create object ri_instance type zcl_aha_http_agent
       exporting
         iv_destination = iv_destination.
+
+  endmethod.
+
+
+  method create_for_url.
+
+    create object ri_instance type zcl_aha_http_agent
+      exporting
+        iv_url = iv_url.
 
   endmethod.
 
@@ -175,13 +203,22 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
 
     data li_client type ref to if_http_client.
 
-    li_client = lcl_client_factory=>create_http_client_by_dest( mv_destination ).
+    if mv_destination is not initial.
+      li_client = lcl_client_factory=>create_http_client_by_dest( mv_destination ).
+      cl_http_utility=>set_request_uri(
+        request = li_client->request
+        uri     = iv_uri ).
+    else.
+      li_client = lcl_client_factory=>create_http_client_by_url( mv_url ).
+      if iv_uri is not initial.
+        cl_http_utility=>set_request_uri(
+          request = li_client->request
+          uri     = iv_uri ).
+      endif.
+    endif.
+
     li_client->request->set_version( if_http_request=>co_protocol_version_1_1 ).
     li_client->request->set_method( iv_method ).
-
-    cl_http_utility=>set_request_uri(
-      request = li_client->request
-      uri     = iv_uri ).
 
     if io_query is bound.
       field-symbols <p> like line of io_query->mt_entries.

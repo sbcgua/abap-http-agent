@@ -78,17 +78,45 @@ class lcl_client_factory definition final.
       importing
         iv_destination type c
       returning
-        value(ri_http_client) type ref to if_http_client .
+        value(ri_http_client) type ref to if_http_client.
+
+    class-methods create_http_client_by_url
+      importing
+        iv_url type string
+      returning
+        value(ri_http_client) type ref to if_http_client
+      raising
+        zcx_aha_error.
 
     class-methods inject_http_client
       importing
-        ii_http_client type ref to if_http_client .
+        ii_http_client type ref to if_http_client.
+
+    class-methods parse_url
+      importing
+        iv_url type string
+      exporting
+        ev_host type string
+        ev_uri  type string
+      raising
+        zcx_aha_error.
 
   private section.
     class-data gi_http_client type ref to if_http_client.
 endclass.
 
 class lcl_client_factory implementation.
+
+  method parse_url.
+
+    find regex '^(https?://[^/]+)(/.*)?$' in iv_url
+      submatches ev_host ev_uri.
+    if sy-subrc <> 0.
+      zcx_aha_error=>raise( 'Mailformed url' ).
+    endif.
+
+  endmethod.
+
   method create_http_client_by_dest.
     if gi_http_client is bound.
       ri_http_client = gi_http_client.
@@ -98,6 +126,34 @@ class lcl_client_factory implementation.
           destination = iv_destination
         importing
           client = ri_http_client ).
+    endif.
+  endmethod.
+
+  method create_http_client_by_url.
+    if gi_http_client is bound.
+      ri_http_client = gi_http_client.
+    else.
+      data lv_host type string.
+      data lv_uri  type string.
+
+      parse_url(
+        exporting
+          iv_url = iv_url
+        importing
+          ev_host = lv_host
+          ev_uri  = lv_uri ).
+
+      cl_http_client=>create_by_url(
+        exporting
+          url    = lv_host
+          ssl_id = 'ANONYM' " TODO support other IDs
+          " TODO support proxies
+        importing
+          client = ri_http_client ).
+
+      cl_http_utility=>set_request_uri(
+        request = ri_http_client->request
+        uri     = lv_uri ).
     endif.
   endmethod.
 
