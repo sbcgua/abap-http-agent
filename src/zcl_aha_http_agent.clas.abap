@@ -49,6 +49,13 @@ class zcl_aha_http_agent definition
       returning
         value(rv_yes) type abap_bool.
 
+    class-methods is_string_map
+      importing
+        io_type type ref to cl_abap_typedescr
+        iv_payload type any
+      returning
+        value(rv_yes) type abap_bool.
+
     class-methods attach_payload
       importing
         ii_request type ref to if_http_request
@@ -123,6 +130,20 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
       endtry.
       ii_request->set_data( lv_xdata ).
 
+    elseif is_string_map( io_type = lo_type iv_payload = iv_payload ) = abap_true.
+
+      data lo_smap type ref to zcl_abap_string_map.
+      data lv_cdata type string.
+
+      lo_smap ?= iv_payload.
+
+      ii_request->set_header_field(
+        name  = 'content-type'
+        value = 'application/x-www-form-urlencoded' ).
+
+      lv_cdata = lcl_utils=>to_urlencoded( lo_smap ).
+      ii_request->set_cdata( lv_cdata ).
+
     else.
       zcx_aha_error=>raise( |Unexpected payload type { lo_type->absolute_name }| ).
     endif.
@@ -195,6 +216,25 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
     data lt_multipart_dummy type zif_aha_http_agent=>tt_multipart.
     rv_yes = boolc( io_type->type_kind = cl_abap_typedescr=>typekind_table
       and io_type->absolute_name = cl_abap_typedescr=>describe_by_data( lt_multipart_dummy )->absolute_name ).
+
+  endmethod.
+
+
+  method is_string_map.
+
+    if io_type->type_kind <> cl_abap_typedescr=>typekind_oref.
+      return.
+    endif.
+
+    try.
+      data li_template type ref to zcl_abap_string_map.
+      li_template ?= iv_payload.
+      rv_yes = abap_true.
+    catch cx_sy_move_cast_error.
+    endtry.
+
+    " TODO maybe make more indirect detection, in case ajson is integrated
+    " e.g. by stringify and mt_node_tree
 
   endmethod.
 

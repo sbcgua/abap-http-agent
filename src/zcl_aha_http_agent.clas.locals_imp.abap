@@ -20,6 +20,12 @@ class lcl_utils definition final.
       raising
         zcx_aha_error.
 
+    class-methods to_urlencoded
+      importing
+        i_map type ref to zcl_abap_string_map
+      returning
+        value(rv_str) type string.
+
 endclass.
 
 class lcl_utils implementation.
@@ -63,6 +69,21 @@ class lcl_utils implementation.
           cx_parameter_invalid_type.
       zcx_aha_error=>raise( 'conversion failed' ).
     endtry.
+
+  endmethod.
+
+  method to_urlencoded.
+
+    data lt_pairs type string_table.
+    data lv_pair type string.
+    field-symbols <e> like line of i_map->mt_entries.
+
+    loop at i_map->mt_entries assigning <e>.
+      lv_pair = <e>-k && '=' && cl_http_utility=>if_http_utility~escape_url( <e>-v ).
+      append lv_pair to lt_pairs.
+    endloop.
+
+    rv_str = concat_lines_of( table = lt_pairs sep = `&` ).
 
   endmethod.
 
