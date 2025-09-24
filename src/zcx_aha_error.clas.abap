@@ -7,18 +7,19 @@ class ZCX_AHA_ERROR definition
 public section.
 
   interfaces IF_T100_MESSAGE .
+  types ty_rc type c length 4.
 
   constants:
     begin of ZCX_AHA_ERROR,
-      msgid type symsgid value 'SY',
-      msgno type symsgno value '499',
+      msgid type symsgid value '00',
+      msgno type symsgno value '001',
       attr1 type scx_attrname value 'A1',
       attr2 type scx_attrname value 'A2',
       attr3 type scx_attrname value 'A3',
       attr4 type scx_attrname value 'A4',
     end of ZCX_AHA_ERROR .
   data MESSAGE type STRING read-only .
-  data RC type STRING read-only .
+  data RC type ty_rc read-only .
   data A1 type SYMSGV read-only .
   data A2 type SYMSGV read-only .
   data A3 type SYMSGV read-only .
@@ -29,7 +30,7 @@ public section.
       !TEXTID like IF_T100_MESSAGE=>T100KEY optional
       !PREVIOUS like PREVIOUS optional
       !MESSAGE type STRING optional
-      !RC type STRING optional
+      !RC type ty_rc optional
       !A1 type SYMSGV optional
       !A2 type SYMSGV optional
       !A3 type SYMSGV optional
@@ -48,7 +49,7 @@ ENDCLASS.
 CLASS ZCX_AHA_ERROR IMPLEMENTATION.
 
 
-method CONSTRUCTOR.
+  method CONSTRUCTOR.
 CALL METHOD SUPER->CONSTRUCTOR
 EXPORTING
 PREVIOUS = PREVIOUS
@@ -65,7 +66,7 @@ if textid is initial.
 else.
   IF_T100_MESSAGE~T100KEY = TEXTID.
 endif.
-endmethod.
+  endmethod.
 
 
 method raise.

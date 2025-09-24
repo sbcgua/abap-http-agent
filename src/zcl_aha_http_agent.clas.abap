@@ -1,30 +1,58 @@
 class zcl_aha_http_agent definition
   public
   final
-  create private .
+  create private.
 
   public section.
 
-    interfaces zif_aha_http_agent .
+    interfaces zif_aha_http_agent.
 
     class-methods create_for_rfc_destination
       importing
         !iv_destination type c
       returning
-        value(ri_instance) type ref to zif_aha_http_agent .
+        value(ri_instance) type ref to zif_aha_http_agent
+      raising
+        zcx_aha_error.
+
+    class-methods create_for_url
+      importing
+        !iv_url type csequence
+      returning
+        value(ri_instance) type ref to zif_aha_http_agent
+      raising
+        zcx_aha_error.
 
     methods constructor
       importing
-        !iv_destination type c.
+        !iv_url type csequence optional
+        !iv_destination type c optional
+      raising
+        zcx_aha_error.
 
   protected section.
   private section.
 
     data mv_destination type rfcdest.
+    data mv_url type string.
 
     class-methods is_multipart_tab
       importing
         io_type type ref to cl_abap_typedescr
+      returning
+        value(rv_yes) type abap_bool.
+
+    class-methods is_ajson
+      importing
+        io_type type ref to cl_abap_typedescr
+        iv_payload type any
+      returning
+        value(rv_yes) type abap_bool.
+
+    class-methods is_string_map
+      importing
+        io_type type ref to cl_abap_typedescr
+        iv_payload type any
       returning
         value(rv_yes) type abap_bool.
 
@@ -34,6 +62,12 @@ class zcl_aha_http_agent definition
         iv_payload type any
       raising
         zcx_aha_error.
+
+    class-methods is_method_w_body
+      importing
+        iv_method type zif_aha_http_agent=>ty_http_method
+      returning
+        value(rv_yes) type abap_bool.
 
 ENDCLASS.
 
@@ -77,6 +111,39 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
         lo_part->set_content_type( <part>-content_type ).
         lo_part->set_data( <part>-data ).
       endloop.
+
+    elseif is_ajson( io_type = lo_type iv_payload = iv_payload ) = abap_true. " maybe request just "stringifiable ?"
+      data li_ajson type ref to zif_ajson.
+      data lx_ajson type ref to zcx_ajson_error.
+      data lv_xdata type xstring.
+
+      li_ajson ?= iv_payload.
+
+      ii_request->set_header_field(
+        name  = 'content-type'
+        value = 'application/json; charset=utf-8' ).
+
+      try.
+        lv_xdata = lcl_utils=>string_to_xstring_utf8( li_ajson->stringify( ) ).
+      catch zcx_ajson_error into lx_ajson.
+        zcx_aha_error=>raise( lx_ajson->get_text( ) ).
+      endtry.
+      ii_request->set_data( lv_xdata ).
+
+    elseif is_string_map( io_type = lo_type iv_payload = iv_payload ) = abap_true.
+
+      data lo_smap type ref to zcl_abap_string_map.
+      data lv_cdata type string.
+
+      lo_smap ?= iv_payload.
+
+      ii_request->set_header_field(
+        name  = 'content-type'
+        value = 'application/x-www-form-urlencoded' ).
+
+      lv_cdata = lcl_utils=>to_urlencoded( lo_smap ).
+      ii_request->set_cdata( lv_cdata ).
+
     else.
       zcx_aha_error=>raise( |Unexpected payload type { lo_type->absolute_name }| ).
     endif.
@@ -87,6 +154,11 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
   method constructor.
 
     mv_destination = iv_destination.
+    mv_url = iv_url.
+
+    if boolc( mv_url is initial ) = boolc( mv_destination is initial ).
+      zcx_aha_error=>raise( 'Specify only one of url or destination' ).
+    endif.
 
   endmethod.
 
@@ -100,6 +172,45 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
   endmethod.
 
 
+  method create_for_url.
+
+    create object ri_instance type zcl_aha_http_agent
+      exporting
+        iv_url = iv_url.
+
+  endmethod.
+
+
+  method is_ajson.
+
+    if io_type->type_kind <> cl_abap_typedescr=>typekind_oref.
+      return.
+    endif.
+
+    try.
+      data li_template type ref to zif_ajson.
+      li_template ?= iv_payload.
+      rv_yes = abap_true.
+    catch cx_sy_move_cast_error.
+    endtry.
+
+    " TODO maybe make more indirect detection, in case ajson is integrated
+    " e.g. by stringify and mt_node_tree
+
+  endmethod.
+
+
+  method is_method_w_body.
+
+    rv_yes = boolc(
+      iv_method = zif_aha_http_agent=>c_methods-post
+      or iv_method = zif_aha_http_agent=>c_methods-delete
+      or iv_method = zif_aha_http_agent=>c_methods-put
+      or iv_method = zif_aha_http_agent=>c_methods-patch ).
+
+  endmethod.
+
+
   method is_multipart_tab.
 
     data lt_multipart_dummy type zif_aha_http_agent=>tt_multipart.
@@ -109,41 +220,65 @@ CLASS ZCL_AHA_HTTP_AGENT IMPLEMENTATION.
   endmethod.
 
 
+  method is_string_map.
+
+    if io_type->type_kind <> cl_abap_typedescr=>typekind_oref.
+      return.
+    endif.
+
+    try.
+      data li_template type ref to zcl_abap_string_map.
+      li_template ?= iv_payload.
+      rv_yes = abap_true.
+    catch cx_sy_move_cast_error.
+    endtry.
+
+    " TODO maybe make more indirect detection, in case ajson is integrated
+    " e.g. by stringify and mt_node_tree
+
+  endmethod.
+
+
   method zif_aha_http_agent~request.
 
     data li_client type ref to if_http_client.
 
-    li_client = lcl_client_factory=>create_http_client_by_dest( mv_destination ).
+    if mv_destination is not initial.
+      li_client = lcl_client_factory=>create_http_client_by_dest( mv_destination ).
+      cl_http_utility=>set_request_uri(
+        request = li_client->request
+        uri     = iv_uri ).
+    else.
+      li_client = lcl_client_factory=>create_http_client_by_url( mv_url ).
+      if iv_uri is not initial.
+        cl_http_utility=>set_request_uri(
+          request = li_client->request
+          uri     = iv_uri ).
+      endif.
+    endif.
+
     li_client->request->set_version( if_http_request=>co_protocol_version_1_1 ).
     li_client->request->set_method( iv_method ).
 
-    cl_http_utility=>set_request_uri(
-      request = li_client->request
-      uri     = iv_uri ).
-
-    if lines( it_query ) > 0.
-      field-symbols <p> type zif_aha_http_agent=>ty_key_value.
-      loop at it_query assigning <p> casting.
+    if io_query is bound.
+      field-symbols <p> like line of io_query->mt_entries.
+      loop at io_query->mt_entries assigning <p>.
         li_client->request->set_form_field(
-          name  = <p>-key
-          value = <p>-val ).
+          name  = <p>-k
+          value = <p>-v ).
       endloop.
     endif.
 
-    if lines( it_headers ) > 0.
-      field-symbols <h> type zif_aha_http_agent=>ty_key_value.
-      loop at it_headers assigning <h> casting.
+    if io_headers is bound.
+      field-symbols <h> like line of io_query->mt_entries.
+      loop at io_headers->mt_entries assigning <h>.
         li_client->request->set_header_field(
-          name  = to_lower( <h>-key )
-          value = <h>-val ).
+          name  = to_lower( <h>-k )
+          value = <h>-v ).
       endloop.
     endif.
 
-    if iv_payload is not initial and (
-      iv_method = zif_aha_http_agent=>c_methods-post
-      or iv_method = zif_aha_http_agent=>c_methods-delete
-      or iv_method = zif_aha_http_agent=>c_methods-put
-      or iv_method = zif_aha_http_agent=>c_methods-patch ).
+    if iv_payload is not initial and is_method_w_body( iv_method ) = abap_true.
       attach_payload(
         ii_request = li_client->request
         iv_payload = iv_payload ).
