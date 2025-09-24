@@ -12,6 +12,7 @@ endclass.
 class ltcl_jwt implementation.
 
   method todo.
+    assert 0 = 0.
   endmethod.
 
 endclass.

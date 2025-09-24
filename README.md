@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD041 -->
 ![abaplint](https://github.com/sbcgua/abap-http-agent/workflows/abaplint/badge.svg)
 ![abap package version](https://img.shields.io/endpoint?url=https://abap-version-shield.sbcg.com.ua/version-shield-json/github/sbcgua/abap-http-agent/src/zif_aha_http_agent.intf.abap)
 
@@ -8,9 +9,15 @@ Convenience wrapper over cl_http_client with json, multipart payloads, convenien
 WIP, interfaces may change (although the thing is stable and productively used)
 
 TODO:
+
 - Docs for vesion 2 !!
 - proxy ?
 - resumable password exception ?
+
+## Dependencies
+
+- [Abap String Map](https://github.com/sbcgua/abap-string-map)
+- [Ajson](https://github.com/sbcgua/ajson)
 
 ## Example
 

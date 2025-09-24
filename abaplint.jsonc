@@ -5,11 +5,23 @@
     "skipGeneratedPersistentClasses": true,
     "skipGeneratedFunctionGroups": true
   },
-  "dependencies": [{
-    "url": "https://github.com/abaplint/deps",
-    "folder": "/deps",
-    "files": "/src/**/*.*"
-  }],
+  "dependencies": [
+    {
+      "url": "https://github.com/abaplint/deps",
+      "folder": "/deps",
+      "files": "/src/**/*.*"
+    },
+    {
+      "url": "https://github.com/sbcgua/ajson",
+      "folder": "/deps",
+      "files": "/src/**/*.*"
+    },
+    {
+      "url": "https://github.com/sbcgua/abap-string-map",
+      "folder": "/deps",
+      "files": "/src/**/*.*"
+    }
+  ],
   "syntax": {
     "version": "v702",
     "errorNamespace": "^(Z|Y|LCL_|TY_|LIF_)",
@@ -24,16 +36,14 @@
     "ambiguous_statement": true,
     "avoid_use": {
       "exclude": [],
-      "reason": "",
       "define": false,
-      "endselect": true,
-      "execSQL": true,
-      "kernelCall": true,
-      "communication": true,
       "statics": true,
-      "systemCall": true,
       "defaultKey": false,
-      "break": true
+      "break": true,
+      "testSeams": true,
+      "describeLines": true,
+      "exportToMemory": true,
+      "exportToDatabase": true
     },
     "begin_end_names": true,
     "chain_mainly_declarations": true,
@@ -41,13 +51,11 @@
     "check_comments": false,
     "check_ddic": true,
     "check_include": true,
-    "check_no_handler_pragma": true,
     "check_syntax": false,
     "check_text_elements": true,
     "check_transformation_exists": true,
     "class_attribute_names": {
       "exclude": [],
-      "reason": "",
       "patternKind": "required",
       "ignoreNames": [],
       "ignorePatterns": [],
@@ -67,7 +75,6 @@
     "description_empty": true,
     "double_space": {
       "exclude": [],
-      "reason": "",
       "keywords": true,
       "startParen": true,
       "endParen": true,
@@ -76,43 +83,39 @@
     "downport": true,
     "empty_line_in_statement": {
       "exclude": [],
-      "reason": "",
       "allowChained": false
     },
     "empty_statement": true,
     "empty_structure": {
       "exclude": [],
-      "reason": "",
       "loop": true,
       "if": true,
       "while": true,
       "case": true,
       "select": true,
       "do": true,
-      "at": true
+      "at": true,
+      "loopAllowIfSubrc": true,
+      "try": true,
+      "when": true
     },
     "exit_or_check": true,
     "exporting": true,
     "forbidden_identifier": {
       "exclude": [],
-      "reason": "",
       "check": []
     },
     "forbidden_void_type": {
       "exclude": [],
-      "reason": "",
       "check": []
     },
-    "form_no_dash": true,
     "form_tables_obsolete": true,
     "fully_type_constants": {
       "exclude": [],
-      "reason": "",
       "checkData": true
     },
     "functional_writing": {
       "exclude": [],
-      "reason": "",
       "ignoreExceptions": true
     },
     "global_class": true,
@@ -122,22 +125,20 @@
     "in_statement_indentation": false,
     "indentation": {
       "exclude": [],
-      "reason": "",
       "ignoreExceptions": true,
       "alignTryCatch": true,
       "globalClassSkipFirst": false,
       "ignoreGlobalClassDefinition": false,
-      "ignoreGlobalInterface": false
+      "ignoreGlobalInterface": false,
+      "selectionScreenBlockIndentation": true
     },
     "inline_data_old_versions": true,
     "keep_single_parameter_on_one_line": {
       "exclude": [],
-      "reason": "",
       "length": 130
     },
     "keyword_case": {
       "exclude": [],
-      "reason": "",
       "style": "lower",
       "ignoreExceptions": true,
       "ignoreLowerClassImplmentationStatement": true,
@@ -148,21 +149,19 @@
       "ignoreKeywords": []
     },
     "line_break_multiple_parameters": {
-      "exclude": ["zcx_aha_error.clas.testclasses.abap"]
+      "exclude": ["zcx_aha_error.clas.testclasses.abap"],
+      "count": 2
     },
     "line_length": {
       "exclude": [],
-      "reason": "",
       "length": 130
     },
     "line_only_punc": {
       "exclude": [],
-      "reason": "",
       "ignoreExceptions": true
     },
     "local_class_naming": {
       "exclude": [],
-      "reason": "",
       "patternKind": "required",
       "ignoreNames": [],
       "ignorePatterns": [],
@@ -170,10 +169,8 @@
       "exception": "^LCX_.+$",
       "test": "^LTCL_.+$"
     },
-    "local_testclass_location": true,
     "local_variable_names": {
       "exclude": [],
-      "reason": "",
       "patternKind": "required",
       "ignoreNames": [],
       "ignorePatterns": [],
@@ -186,14 +183,13 @@
     "message_exists": true,
     "method_length": {
       "exclude": ["zcl_aha_http_agent.clas.testclasses"],
-      "reason": "",
       "statements": 100,
       "errorWhenEmpty": true,
-      "ignoreTestClasses": false
+      "ignoreTestClasses": false,
+      "checkForms": true
     },
     "method_parameter_names": {
       "exclude": [],
-      "reason": "",
       "patternKind": "required",
       "ignoreNames": [],
       "ignorePatterns": [],
@@ -207,23 +203,20 @@
     "msag_consistency": true,
     "nesting": {
       "exclude": [],
-      "reason": "",
       "depth": 5
     },
     "newline_between_methods": {
       "exclude": [],
-      "reason": "",
       "count": 3,
       "logic": "less"
     },
     "no_public_attributes": {
       "exclude": ["zcl_aha_http_agent.clas.testclasses.abap"],
-      "reason": "",
-      "allowReadOnly": true
+      "allowReadOnly": true,
+      "ignoreTestClasses": true
     },
     "object_naming": {
       "exclude": [],
-      "reason": "",
       "patternKind": "required",
       "ignoreNames": [],
       "ignorePatterns": [],
@@ -247,7 +240,6 @@
     },
     "obsolete_statement": {
       "exclude": [],
-      "reason": "",
       "refresh": true,
       "compute": true,
       "add": true,
@@ -257,14 +249,31 @@
       "divide": true,
       "requested": true,
       "occurs": true,
-      "setExtended": true
+      "setExtended": true,
+      "withHeaderLine": true,
+      "fieldSymbolStructure": true,
+      "typePools": true,
+      "load": true,
+      "parameter": true,
+      "ranges": true,
+      "communication": true,
+      "pack": true,
+      "selectWithoutInto": true,
+      "freeMemory": true,
+      "exitFromSQL": true,
+      "sortByFS": true,
+      "callTransformation": true,
+      "regex": true,
+      "occurences": true,
+      "clientSpecified": true,
+      "formDefinition": true,
+      "formImplementation": true
     },
     "parser_error": true,
     "prefer_inline": true,
     "prefer_returning_to_exporting": true,
     "preferred_compare_operator": {
       "exclude": [],
-      "reason": "",
       "badOperators": [
         "EQ",
         "><",
@@ -277,33 +286,30 @@
     },
     "prefix_is_current_class": {
       "exclude": [],
-      "reason": "",
       "omitMeInstanceCalls": true
     },
     "release_idoc": true,
     "remove_descriptions": {
       "exclude": [],
-      "reason": "",
-      "ignoreExceptions": true
+      "ignoreExceptions": true,
+      "ignoreWorkflow": true
     },
     "rfc_error_handling": true,
     "selection_screen_naming": {
       "exclude": [],
-      "reason": "",
       "patternKind": "required",
       "ignoreNames": [],
       "ignorePatterns": [],
       "parameter": "^P_.+$",
-      "selectOption": "^S_.+$"
+      "selectOption": "^S_.+$",
+      "screenElement": "^E_.+$"
     },
     "sequential_blank": {
       "exclude": [],
-      "reason": "",
       "lines": 4
     },
     "short_case": {
       "exclude": [],
-      "reason": "",
       "length": 1,
       "allow": []
     },
@@ -311,7 +317,6 @@
     "space_before_colon": true,
     "space_before_dot": {
       "exclude": [],
-      "reason": "",
       "ignoreGlobalDefinition": true,
       "ignoreExceptions": true
     },
@@ -320,11 +325,9 @@
     "superclass_final": true,
     "tabl_enhancement_category": true,
     "try_without_catch": true,
-    "type_begin_single_include": true,
     "type_form_parameters": true,
     "types_naming": {
       "exclude": [],
-      "reason": "",
       "pattern": "^(TY|T.{1,2})_.+$"
     },
     "unknown_types": true,
